@@ -1,0 +1,5 @@
+name: Continuous Integration - Reusable
+on: [workflow_call]
+jobs:
+  call-continuous-integration-reusable:
+    uses: devopsnagesha/github-reusable-workflows/.github/workflows/ci.yml@main
