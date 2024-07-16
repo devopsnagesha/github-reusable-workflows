@@ -5,6 +5,9 @@ on:
       project_name:
         required: true
         type: string
+      npm_install:
+        required: true
+        type: boolean
     secrets:
       vault_token:
         required: true
@@ -28,15 +31,20 @@ jobs:
 
       - run: echo OK
         name: Code Lint
-      #       - run: echo OK
-      #         name: Code Build
+
       - run: npm install
         name: Install NodeJS modules
+        if: ${{ inputs.npm_install }}
+
       - run: echo npm run test:unit
         name: Code Unit Tests
+
       - run: echo npm run test:integration
         name: Code Integration Tests
-      - run: echo /opt/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner -Dsonar.host.url=http://sonarqube-internal.angadicnc.online:9000 -Dsonar.projectKey=${{ inputs.project_name }} -Dsonar.qualitygate.wait=true - ${{ steps.vault-secrets.outputs.sonarqube_password }} >/tmp/1
+
+      - run: /opt/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner -Dsonar.host.url=http://sonarqube-internal.rdevops6a.online:9000 -Dsonar.projectKey=${{ inputs.project_name }} -Dsonar.qualitygate.wait=true -Dsonar.login=${{ steps.vault-secrets.outputs.sonarqube_user }} -Dsonar.password=${{ steps.vault-secrets.outputs.sonarqube_password }}
         name: Code Review
+
       - run: echo OK
         name: Release Software
+        if: ${{ github.ref == 'refs/tags/*' }}
