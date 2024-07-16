@@ -1,16 +1,31 @@
-name: Continuous Integration - Resuable
+name: Continuous Integration - Reusable
 on:
   workflow_call:
     inputs:
       project_name:
         required: true
         type: string
+    secrets:
+      vault_token:
+        required: true
 jobs:
   CI_Steps:
     runs-on: [self-hosted]
     steps:
       - name: Code Checkout
         uses: actions/checkout@v4
+
+      - name: Import Vault Secrets
+        id: vault-secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: https://vault.angadicnc.online:8200/
+          token: ${{ secrets.vault_token }}
+          tlsSkipVerify: true
+          secrets: |
+            common/data/common sonarqube_user | sonarqube_user;
+            common/data/common sonarqube_password | sonarqube_password ;
+
       - run: echo OK
         name: Code Lint
       #       - run: echo OK
@@ -21,7 +36,7 @@ jobs:
         name: Code Unit Tests
       - run: echo npm run test:integration
         name: Code Integration Tests
-      - run: echo /opt/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner -Dsonar.host.url=http://sonarqube-internal.devopsnagesha.online:9000 -Dsonar.projectKey=${{ inputs.project_name }} -Dsonar.qualitygate.wait=true
+      - run: echo /opt/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner -Dsonar.host.url=http://sonarqube-internal.angadicnc.online:9000 -Dsonar.projectKey=${{ inputs.project_name }} -Dsonar.qualitygate.wait=true - ${{ steps.vault-secrets.outputs.sonarqube_password }} >/tmp/1
         name: Code Review
       - run: echo OK
         name: Release Software
